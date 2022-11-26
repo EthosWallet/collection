@@ -2,10 +2,12 @@
 module collection::collection_tests {
     use sui::test_scenario::{Self, Scenario};
     use collection::collection::{Self, Election, Voter};
-    use capy::capy::Capy;
+    use capy::capy::{Self, Capy, CapyManagerCap, CapyRegistry};
 
     const ADMIN: address = @0x123;
     const VOTER: address = @0x234;
+
+    // ================ Tests ================
 
     #[test]
     fun test_init() {
@@ -35,6 +37,28 @@ module collection::collection_tests {
 
         test_scenario::end(scenario);
     }
+
+    #[test]
+    fun test_batch_capy() {
+        let scenario = test_scenario::begin(ADMIN);
+        {
+            let ctx = test_scenario::ctx(&mut scenario);
+            capy::init_for_test(ctx);
+        };
+
+        test_scenario::next_tx(&mut scenario, ADMIN);
+        {
+            let capy_manager_cap = test_scenario::take_from_sender<CapyManagerCap>(&mut scenario);
+            let reg = test_scenario::take_shared<CapyRegistry>(&mut scenario);
+            capy::batch_for_test(&capy_manager_cap, &mut reg, &mut scenario);
+            test_scenario::return_to_sender(&scenario, capy_manager_cap);
+            test_scenario::return_shared(reg);
+        };
+
+        test_scenario::end(scenario);
+    }
+
+    // ================ Test-Only Functions ================
 
     fun nominate_for_test(
         election: &mut Election,
