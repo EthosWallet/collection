@@ -6,6 +6,7 @@ module collection::collection_tests {
 
     const ADMIN: address = @0x123;
     const VOTER: address = @0x234;
+    const NOMINATOR: address = @0x345;
 
     // ================ Tests ================
 
@@ -54,6 +55,45 @@ module collection::collection_tests {
             test_scenario::return_to_sender(&scenario, capy_manager_cap);
             test_scenario::return_shared(reg);
         };
+
+        test_scenario::end(scenario);
+    }
+
+    #[test]
+    fun test_e2e() {
+        // First tx: init collection and capys
+        let scenario = test_scenario::begin(ADMIN);
+        {
+            let ctx = test_scenario::ctx(&mut scenario);
+            collection::init_for_test(ctx)
+            capy::init_for_test(ctx);
+        };
+
+        // Second tx: register voter
+        test_scenario::next_tx(&mut scenario, VOTER);
+        {
+            let election_object = test_scenario::take_shared<Election>(&mut scenario);
+            register_for_test(&mut election_object, &mut scenario);
+            test_scenario::return_shared(election_object);
+        };
+
+        // Third tx: create capys via `batch`
+        test_scenario::next_tx(&mut scenario, ADMIN);
+        {
+            let capy_manager_cap = test_scenario::take_from_sender<CapyManagerCap>(&mut scenario);
+            let reg = test_scenario::take_shared<CapyRegistry>(&mut scenario);
+            capy::batch_for_test(&capy_manager_cap, &mut reg, &mut scenario);
+            test_scenario::return_to_sender(&scenario, capy_manager_cap);
+            test_scenario::return_shared(reg);
+        };
+
+        // Fourth tx: nominate capy
+        test_scenario::next_tx(&mut scenario, ADMIN);
+        {
+
+        };
+
+        // Fifth tx: vote on capy
 
         test_scenario::end(scenario);
     }
