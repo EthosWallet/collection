@@ -129,7 +129,13 @@ module collection::collection {
         candidate.cycle
     }
 
-    public fun votes(candidate: &Candidate): u64 {
+    public fun votes_from_candidate(candidate: &Candidate): u64 {
+        candidate.votes
+    }
+
+    public fun votes_from_election(election: &Election, index: u64): u64 {
+        let candidate_table = &election.candidates;
+        let candidate = object_table::borrow(candidate_table, index);
         candidate.votes
     }
 
