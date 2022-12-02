@@ -9,4 +9,5 @@ sui-capybaras = { git = "https://github.com/shayansanjideh/sui.git", subdir = "s
 
 [addresses]
 collection =  "0x0"
-sui =  "0000000000000000000000000000000000000002"
+sui =  "0x2"
+capy = "0x59dd642c7faa531fc9547a4b7a11bbc20699e3ad"
