@@ -197,5 +197,60 @@ module collection::collection {
             cycle: 0,
             candidates: object_table::new<u64, Candidate>(ctx)
         });
+
+        transfer::transfer(PastWinners {
+            id: object::new(ctx),
+            winners: object_table::new<u64, Candidate>(ctx)
+        }, tx_context::sender(ctx));
+    }
+
+    #[test_only]
+    public fun end_election_for_test(
+        _: &ElectionAdminCap,
+        election: &mut Election,
+        past_winners: &mut PastWinners,
+    ) {
+        // Find the candidate with the greatest number of votes (the `winner`)
+        let candidate_table = &mut election.candidates;
+        let current_index = 0;
+        let winner_index = 0;
+        let max_votes = 0;
+        while (current_index < object_table::length(candidate_table)) {
+            let current_candidate = object_table::borrow(candidate_table, current_index);
+            if (current_candidate.votes > max_votes) {
+                max_votes = current_candidate.votes;
+                winner_index = copy current_index;
+                current_index = current_index + 1;
+            } else current_index = current_index + 1;
+        };
+        let winner = object_table::remove(candidate_table, winner_index);
+
+        // Move the winner to the PastWinners' object
+        let past_winners_table = &mut past_winners.winners;
+        object_table::add(past_winners_table, election.cycle, winner);
+
+        // Update the cycle for the next election
+        election.cycle = election.cycle + 1;
+    }
+
+    #[test_only]
+    public fun new_election_for_test(
+        _: &ElectionAdminCap,
+        election: &mut Election,
+        ctx: &mut TxContext
+    ) {
+        let current_cycle = election.cycle;
+
+        transfer::share_object(Election {
+            id: object::new(ctx),
+            cycle: current_cycle,
+            candidates: object_table::new<u64, Candidate>(ctx)
+        });
+    }
+
+    #[test_only]
+    public fun is_past_winners_empty(past_winners: &PastWinners): bool {
+        let winners = &past_winners.winners;
+        object_table::is_empty(winners)
     }
 }
